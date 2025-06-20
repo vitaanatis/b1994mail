@@ -1,19 +1,29 @@
-// server.js - BlipSend Backend
+// server.js - BlipSend Backend (serving both frontend and API)
 
 // Import necessary modules
 const express = require('express'); // Express.js for creating the web server
 const nodemailer = require('nodemailer'); // Nodemailer for sending emails via SMTP
-const cors = require('cors'); // CORS middleware to allow requests from your frontend
+const cors = require('cors'); // CORS middleware (less critical now for same-origin, but good to keep)
+const path = require('path'); // Node.js built-in module for path manipulation
 
 // Initialize Express app
 const app = express();
 
 // Middleware
-// Enable CORS for all origins (important for client-side frontend to access this backend)
-// In a production environment, you might want to restrict this to your frontend's specific domain.
+// Enable CORS for all origins (useful during development or if frontend served from different domain)
 app.use(cors());
 // Parse JSON bodies of incoming requests
 app.use(express.json());
+
+// --- Serve Static Files (Your Frontend) ---
+// This tells Express to serve static files from the current directory (where server.js is)
+// This assumes index.html, CSS, and JS are in the same directory as server.js
+app.use(express.static(__dirname)); // __dirname refers to the directory the current script is in
+
+// Route to serve your index.html for the root URL
+app.get('/', (req, res) => {
+    res.sendFile(path.join(__dirname, 'index.html'));
+});
 
 // --- Configuration for Nodemailer ---
 // Get Gmail credentials from environment variables for security.
@@ -82,10 +92,6 @@ app.post('/send-email', async (req, res) => {
     }
 });
 
-// --- Basic Root Endpoint (optional) ---
-app.get('/', (req, res) => {
-    res.status(200).send('BlipSend Backend is running. Use /send-email endpoint for POST requests.');
-});
 
 // --- Start the Server ---
 // Render automatically sets the PORT environment variable.
